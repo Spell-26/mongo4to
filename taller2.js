@@ -264,5 +264,154 @@ async function insertDataToCollections() {
 
 }
 
+//busca todos los registros en la coleccion citas realizados en el año 2023
+async function findData(){
+    const client = new MongoClient(url);
+
+    try {
+        await client.connect();
+
+        const db = client.db('beautysoft2');
+        const collect = db.collection('citas');
+
+        //query a usar citas realizadas en el año 2023
+        const query = { fecha: 2023 };
+
+
+        const resultado = collect.find(query);
+
+        if ((await collect.countDocuments(query)) === 0 ){
+            console.log("no se encontraron resultados");
+        }
+
+        for await (const doc of resultado){
+            console.dir(doc)
+        }
+
+    }
+    catch(e){
+        console.log(e);
+    }
+    finally{
+        await client.close();
+    }
+}
+
+//busca Un solo cliente que tenga su estado activo
+async function findOneData(){
+    const client = new MongoClient(url);
+
+    try {
+        await client.connect();
+
+        const db = client.db('beautysoft2');
+        const collect = db.collection('clientes');
+
+        //query a usar usuarios activos
+        const query = { estado: true };
+
+
+        const resultado = collect.findOne(query);
+
+        if ((await collect.countDocuments(query)) === 0 ){
+            console.log("no se encontraron resultados");
+        }
+
+        
+        console.dir(resultado);
+        
+
+    }
+    catch(e){
+        console.log(e);
+    }
+    finally{
+        await client.close();
+    }
+}
+
+//eliminar todas las citas del 2022
+async function deleteManyData(){
+    const client = new MongoClient(url);
+
+    try {
+        await client.connect();
+
+        const db = client.db('beautysoft2');
+        const collect = db.collection('citas');
+
+        //query a usar citas realizadas en el año 2022
+        const query = { fecha: 2022 };
+
+
+        const resultado = await collect.deleteMany(query);
+
+        console.log("Registros eliminados: ", resultado.deletedCount)
+
+    }
+    catch(e){
+        console.log(e);
+    }
+    finally{
+        await client.close();
+    }
+}
+
+// agreggate con 3 etapas
+async function buscarActivos(){
+    const client = new MongoClient(url);
+
+    try{
+
+        await client.connect();
+
+        const base = client.db("beautysoft2");
+        const collection = base.collection("citas");
+
+        const consulta = [
+            {
+                $project: {
+                    estilista_activo : "$estilista.estado",
+                    estilsita_nombre: "$estilista.nombre"
+                }
+            },
+            {
+                $match: { 
+                    fecha: 2023,
+                    estilista_activo: true
+            
+                }
+
+            },
+            {
+                $sort:{
+                    estilsita_nombre : -1
+                }
+            }
+        ];
+
+        const resultado =  collection.aggregate(consulta);
+
+        if ((await collection.countDocuments(consulta)) === 0 ){
+            console.log("no se encontraron resultados");
+        }
+
+        for await (const doc of resultado){
+            console.dir(doc)
+        }
+
+    }
+    catch(e){
+        console.log(e);
+    }
+    finally{
+        await client.close();
+    }
+}
+
 //crearBaseDeDatos();
-insertDataToCollections();
+//insertDataToCollections();
+//findData();
+//findOneData();
+//deleteManyData();
+//buscarActivos();
