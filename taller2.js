@@ -357,8 +357,59 @@ async function deleteManyData(){
     }
 }
 
-// agreggate con 3 etapas
+// agreggate con 3 pipes
 async function buscarActivos(){
+    const client = new MongoClient(url);
+
+    try{
+
+        await client.connect();
+
+        const base = client.db("beautysoft2");
+        const collection = base.collection("estilistas");
+
+        const consulta = [
+            {
+                $project: {
+                    nombre: true,
+                    apellido: true,
+                    estado: true,
+                    correo: true
+                }
+            },
+            {
+                $match: {
+                    estado: true
+                }
+            },
+            {
+                $sort: {
+                    nombre: -1
+                }
+            }
+        ];
+
+        const resultado =  collection.aggregate(consulta);
+
+        if ((await collection.countDocuments(consulta)) === 0 ){
+            console.log("no se encontraron resultados");
+        }
+
+        for await (const doc of resultado){
+            console.dir(doc)
+        }
+
+    }
+    catch(e){
+        console.log(e);
+    }
+    finally{
+        await client.close();
+    }
+}
+
+//agregate 3 pipes 
+async function citaActiva(){
     const client = new MongoClient(url);
 
     try{
@@ -415,3 +466,4 @@ async function buscarActivos(){
 //findOneData();
 //deleteManyData();
 //buscarActivos();
+//citaActiva();
